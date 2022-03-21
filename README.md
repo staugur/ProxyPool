@@ -77,7 +77,7 @@ proxypool    | 2020-02-19 17:09:46,596 INFO success: tester entered RUNNING stat
 当然你也可以选择自己 Build，直接运行如下命令即可：
 
 ```
-docker-compose -f build.yml up
+docker-compose -f build.yaml up
 ```
 
 如果下载速度特别慢，可以自行修改 Dockerfile，修改：
@@ -226,6 +226,7 @@ get random proxy 116.196.115.209:8080
 - ENABLE_GETTER：允许 Getter 启动，默认 true
 - ENABLE_SERVER：运行 Server 启动，默认 true
 
+
 ### 环境
 
 - APP_ENV：运行环境，可以设置 dev、test、prod，即开发、测试、生产环境，默认 dev
@@ -259,6 +260,9 @@ get random proxy 116.196.115.209:8080
 - LOG_DIR：日志相对路径
 - LOG_RUNTIME_FILE：运行日志文件名称
 - LOG_ERROR_FILE：错误日志文件名称
+- ENABLE_LOG_FILE：是否输出 log 文件，默认 true，如果设置为 false，那么 ENABLE_LOG_RUNTIME_FILE 和 ENABLE_LOG_ERROR_FILE 都不会生效
+- ENABLE_LOG_RUNTIME_FILE：是否输出 runtime log 文件，默认 true
+- ENABLE_LOG_ERROR_FILE：是否输出 error log 文件，默认 true
 
 以上内容均可使用环境变量配置，即在运行前设置对应环境变量值即可，如更改测试地址和 Redis 键名：
 

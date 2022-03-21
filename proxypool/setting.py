@@ -26,7 +26,10 @@ APP_TEST = IS_TEST = APP_ENV == TEST_MODE
 # - gevent: pip install gevent
 # - tornado: pip install tornado
 # - meinheld: pip install meinheld
-APP_PROD_METHOD = env.str('APP_PROD_METHOD', "gevent").lower()
+APP_PROD_METHOD_GEVENT = 'gevent'
+APP_PROD_METHOD_TORNADO = 'tornado'
+APP_PROD_METHOD_MEINHELD = 'meinheld'
+APP_PROD_METHOD = env.str('APP_PROD_METHOD', APP_PROD_METHOD_GEVENT).lower()
 
 # redis host
 REDIS_HOST = env.str('PROXYPOOL_REDIS_HOST',
@@ -67,7 +70,7 @@ TEST_URL = env.str('TEST_URL', 'http://www.baidu.com')
 TEST_TIMEOUT = env.int('TEST_TIMEOUT', 10)
 TEST_BATCH = env.int('TEST_BATCH', 20)
 # only save anonymous proxy
-TEST_ANONYMOUS = True
+TEST_ANONYMOUS = env.bool('TEST_ANONYMOUS', True)
 # TEST_HEADERS = env.json('TEST_HEADERS', {
 #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
 # })
@@ -83,5 +86,24 @@ ENABLE_TESTER = env.bool('ENABLE_TESTER', True)
 ENABLE_GETTER = env.bool('ENABLE_GETTER', True)
 ENABLE_SERVER = env.bool('ENABLE_SERVER', True)
 
-# logger.add(env.str('LOG_RUNTIME_FILE', join(LOG_DIR, 'runtime.log')), level='DEBUG', rotation='1 week', retention='20 days')
-# logger.add(env.str('LOG_ERROR_FILE', join(LOG_DIR, 'error.log')), level='ERROR', rotation='1 week')
+
+ENABLE_LOG_FILE = env.bool('ENABLE_LOG_FILE', True)
+ENABLE_LOG_RUNTIME_FILE = env.bool('ENABLE_LOG_RUNTIME_FILE', True)
+ENABLE_LOG_ERROR_FILE = env.bool('ENABLE_LOG_ERROR_FILE', True)
+
+
+LOG_LEVEL_MAP = {
+    DEV_MODE: "DEBUG",
+    TEST_MODE: "INFO",
+    PROD_MODE: "ERROR"
+}
+
+LOG_LEVEL = LOG_LEVEL_MAP.get(APP_ENV)
+
+if ENABLE_LOG_FILE:
+    if ENABLE_LOG_RUNTIME_FILE:
+        logger.add(env.str('LOG_RUNTIME_FILE', join(LOG_DIR, 'runtime.log')),
+                   level=LOG_LEVEL, rotation='1 week', retention='20 days')
+    if ENABLE_LOG_ERROR_FILE:
+        logger.add(env.str('LOG_ERROR_FILE', join(LOG_DIR, 'error.log')),
+                   level='ERROR', rotation='1 week')
