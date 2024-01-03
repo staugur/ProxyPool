@@ -2,6 +2,7 @@ import platform
 from os.path import dirname, abspath, join
 from environs import Env
 from loguru import logger
+import shutil
 
 
 env = Env()
@@ -51,9 +52,9 @@ REDIS_KEY = env.str('PROXYPOOL_REDIS_KEY', env.str(
     'REDIS_KEY', 'proxies:universal'))
 
 # definition of proxy scores
-PROXY_SCORE_MAX = 100
-PROXY_SCORE_MIN = 0
-PROXY_SCORE_INIT = 10
+PROXY_SCORE_MAX = env.int('PROXY_SCORE_MAX', 100)
+PROXY_SCORE_MIN = env.int('PROXY_SCORE_MIN', 0)
+PROXY_SCORE_INIT = env.int('PROXY_SCORE_INIT', 10)
 
 # definition of proxy number
 PROXY_NUMBER_MAX = 50000
@@ -75,11 +76,17 @@ TEST_ANONYMOUS = env.bool('TEST_ANONYMOUS', True)
 #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
 # })
 TEST_VALID_STATUS = env.list('TEST_VALID_STATUS', [200, 206, 302])
+# whether to set max score when one proxy is tested valid
+TEST_DONT_SET_MAX_SCORE = env.bool('TEST_DONT_SET_MAX_SCORE', False)
 
 # definition of api
 API_HOST = env.str('API_HOST', '0.0.0.0')
 API_PORT = env.int('API_PORT', 5555)
 API_THREADED = env.bool('API_THREADED', True)
+# add an api key to get proxy
+# need a header of `API-KEY` in get request to pass the authenticate
+# API_KEY='', do not need `API-KEY` header
+API_KEY = env.str('API_KEY', '')
 
 # flags of enable
 ENABLE_TESTER = env.bool('ENABLE_TESTER', True)
@@ -99,11 +106,15 @@ LOG_LEVEL_MAP = {
 }
 
 LOG_LEVEL = LOG_LEVEL_MAP.get(APP_ENV)
+LOG_ROTATION = env.str('LOG_ROTATION', '500MB')
+LOG_RETENTION = env.str('LOG_RETENTION', '1 week')
 
 if ENABLE_LOG_FILE:
     if ENABLE_LOG_RUNTIME_FILE:
         logger.add(env.str('LOG_RUNTIME_FILE', join(LOG_DIR, 'runtime.log')),
-                   level=LOG_LEVEL, rotation='1 week', retention='20 days')
+                   level=LOG_LEVEL, rotation=LOG_ROTATION, retention=LOG_RETENTION)
     if ENABLE_LOG_ERROR_FILE:
         logger.add(env.str('LOG_ERROR_FILE', join(LOG_DIR, 'error.log')),
-                   level='ERROR', rotation='1 week')
+                   level='ERROR', rotation=LOG_ROTATION)
+else:
+    shutil.rmtree(LOG_DIR, ignore_errors=True)
