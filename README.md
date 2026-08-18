@@ -14,6 +14,18 @@
 
 代理池原理解析可见「[如何搭建一个高效的代理池](https://cuiqingcai.com/7048.html)」，建议使用之前阅读。
 
+## 使用前注意
+
+本代理池是基于市面上各种公开代理源搭建的，所以可用性并不高，很可能上百上千个代理中才能找到一两个可用代理，不适合直接用于爬虫爬取任务。
+
+如果您的目的是为了尽快使用代理完成爬取任务，建议您对接一些付费代理或者直接使用已有代理资源；如果您的目的是为了学习如何搭建一个代理池，您可以参考本项目继续完成后续步骤。
+
+付费代理推荐：
+
+- [ADSL 拨号代理](https://platform.acedata.cloud/documents/a82a528a-8e32-4c4c-a9d0-a21be7c9ef8c)：海量拨号（中国境内）高质量代理
+- [海外/全球代理](https://platform.acedata.cloud/documents/50f1437a-1857-43c5-85cf-5800ae1b31e4)：中国境外高质量代理
+- [蜂窝 4G/5G 代理](https://platform.acedata.cloud/documents/1cc59b19-1550-4169-a59d-ad6faf7f7517)：极高质量（中国境内）防风控代理
+
 ## 使用准备
 
 首先当然是克隆代码并进入 ProxyPool 文件夹：
@@ -73,12 +85,6 @@ proxypool    | 2020-02-19 17:09:46,596 INFO success: tester entered RUNNING stat
 可以看到 Redis、Getter、Server、Tester 都已经启动成功。
 
 这时候访问 [http://localhost:5555/random](http://localhost:5555/random) 即可获取一个随机可用代理。
-
-当然你也可以选择自己 Build，直接运行如下命令即可：
-
-```
-docker-compose -f build.yaml up
-```
 
 如果下载速度特别慢，可以自行修改 Dockerfile，修改：
 
@@ -216,6 +222,27 @@ get random proxy 116.196.115.209:8080
 
 可以看到成功获取了代理，并请求 httpbin.org 验证了代理的可用性。
 
+### 获取多个代理
+
+如果一次需要多个代理，可以给 `/random` 接口传入 `count` 参数，一次返回多个随机代理（每行一个）：
+
+```
+GET http://localhost:5555/random?count=5
+```
+
+`count` 不传或为 1 时行为不变，仍返回单个代理；`count` 大于可用数量时返回全部可用代理。也可与 `key` 参数组合使用。
+
+### 按地区（国家）筛选代理
+
+可以给 `/random` 和 `/all` 接口传入 `area` 参数，按代理 IP 所属国家筛选（ISO 国家码，大小写不敏感），例如只获取国内（中国）代理：
+
+```
+GET http://localhost:5555/random?area=CN
+GET http://localhost:5555/all?area=CN
+```
+
+国家信息由内置的 GeoLite2 离线库解析，无法解析归属地的代理会被排除。`area` 可与 `count`、`key` 参数组合使用。
+
 ## 可配置项
 
 代理池可以通过设置环境变量来配置一些参数。
@@ -250,9 +277,14 @@ get random proxy 116.196.115.209:8080
 - TEST_TIMEOUT：测试超时时间，默认 10 秒
 - TEST_BATCH：批量测试数量，默认 20 个代理
 - TEST_VALID_STATUS：测试有效的状态码
+- TEST_ANONYMOUS：是否只保留匿名代理，默认 true
+- TEST_ANONYMOUS_URL：匿名 / 出口 IP 检测地址，默认 `https://httpbin.org/ip`，需返回 httpbin 格式的 JSON（`{"origin": "1.2.3.4"}`）。可指向自建 httpbin 服务以避免公共服务限流
 - API_HOST：代理 Server 运行 Host，默认 0.0.0.0
 - API_PORT：代理 Server 运行端口，默认 5555
 - API_THREADED：代理 Server 是否使用多线程，默认 true
+- API_KEY：API 访问鉴权密钥，默认空（即不鉴权）。设置后，调用 `/random`、`/all`、`/count` 需在请求头携带 `API-KEY`，详见下方「安全性」说明
+
+> ⚠️ 安全提示：代理 Server 默认监听 `0.0.0.0` 且 `API_KEY` 默认为空，任何能访问该端口的人都可以调用 `/random`、`/all`、`/count`。如果将代理池**暴露到公网**，请务必设置 `API_KEY`，并配合防火墙/安全组限制来源。`key` 查询参数已做格式校验，仅允许字母、数字及 `_ : -`，最长 64 位。
 
 ### 日志
 
@@ -346,11 +378,6 @@ class Daili66Crawler(BaseCrawler):
 ## 部署
 
 本项目提供了 Kubernetes 部署脚本，如需部署到 Kubernetes，请参考 [kubernetes](./kubernetes)。
-
-## 待开发
-
-- [ ] 前端页面管理
-- [ ] 使用情况统计分析
 
 如有一起开发的兴趣可以在 Issue 留言，非常感谢！
 

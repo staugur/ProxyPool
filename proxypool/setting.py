@@ -55,6 +55,8 @@ REDIS_KEY = env.str('PROXYPOOL_REDIS_KEY', env.str(
 PROXY_SCORE_MAX = env.int('PROXY_SCORE_MAX', 100)
 PROXY_SCORE_MIN = env.int('PROXY_SCORE_MIN', 0)
 PROXY_SCORE_INIT = env.int('PROXY_SCORE_INIT', 10)
+# whether to get a universal random proxy if no proxy exists in the sub-pool identified by a specific key
+PROXY_RAND_KEY_DEGRADED = env.bool('TEST_ANONYMOUS', True)
 
 # definition of proxy number
 PROXY_NUMBER_MAX = 50000
@@ -72,6 +74,10 @@ TEST_TIMEOUT = env.int('TEST_TIMEOUT', 10)
 TEST_BATCH = env.int('TEST_BATCH', 20)
 # only save anonymous proxy
 TEST_ANONYMOUS = env.bool('TEST_ANONYMOUS', True)
+# the url used to check the proxy anonymity and its exit ip;
+# must return json like httpbin.org/ip ({"origin": "1.2.3.4"});
+# point this to a self-hosted httpbin to avoid public rate limits
+TEST_ANONYMOUS_URL = env.str('TEST_ANONYMOUS_URL', 'https://httpbin.org/ip')
 # TEST_HEADERS = env.json('TEST_HEADERS', {
 #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.71 Safari/537.36',
 # })
